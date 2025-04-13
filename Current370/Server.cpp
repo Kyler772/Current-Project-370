@@ -79,13 +79,33 @@ int main() {
     }
     std::cout << "Client connected successfully!" << std::endl;
 
-    // Read data from client
-    std::cout << "Waiting for message from client..." << std::endl;
-    int valread = recv(new_socket, buffer, 1024, 0);
-    if (valread > 0) {
-        std::cout << "Message from client: " << buffer << std::endl;
-    } else {
-        perror("Receive failed");
+    // Read data from client and respond
+    bool isEnd = false;
+    while (isEnd == false) {
+        std::cout << "Waiting for message from client..." << std::endl;
+        int valread = recv(new_socket, buffer, 1024, 0);
+        if (valread > 0) {
+            std::cout << "Message from client: " << buffer << std::endl;
+
+            // Respond to the client
+            const char* response = "Message received on the server!";
+            std::cout << "Sending response to client..." << std::endl;
+            if (send(new_socket, response, strlen(response), 0) < 0) {
+                perror("Send failed");
+            } else {
+                std::cout << "Response sent successfully!" << std::endl;
+            }
+
+            // Check for "exit" message to end communication
+            if (strncmp(buffer, "exit", 4) == 0) {
+                isEnd = true;
+            }
+        } else {
+            perror("Receive failed");
+        }
+
+        // Clear buffer for the next message
+        memset(buffer, 0, sizeof(buffer));
     }
 
     // Clean up

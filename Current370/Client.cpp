@@ -9,6 +9,7 @@
 #define PORT 8080
 
 int main() {
+    bool isEnd = false;
     WSADATA wsaData;
 
     // Initialize Winsock
@@ -51,13 +52,32 @@ int main() {
     }
     std::cout << "Connected to server successfully!" << std::endl;
 
-    // Send message to server
-    const char* message = "Hello, Server!";
-    std::cout << "Sending message to server..." << std::endl;
-    if (send(sockfd, message, strlen(message), 0) < 0) {
-        perror("Send failed");
-    } else {
-        std::cout << "Message sent successfully!" << std::endl;
+    char userMessage[500];
+    while (isEnd == false) {
+        std::cout << "Enter your message: " << std::endl;
+        std::cin.getline(userMessage, 500);
+
+        // Send message to server
+        std::cout << "Sending message to server..." << std::endl;
+        if (send(sockfd, userMessage, strlen(userMessage), 0) < 0) {
+            perror("Send failed");
+        } else {
+            std::cout << "Message sent successfully!" << std::endl;
+
+            // Receive response from server
+            char serverResponse[1024] = {0};
+            int valread = recv(sockfd, serverResponse, 1024, 0);
+            if (valread > 0) {
+                std::cout << "Response from server: " << serverResponse << std::endl;
+            } else {
+                perror("Receive failed");
+            }
+        }
+
+        // Check for "exit" command to end communication
+        if (strncmp(userMessage, "exit", 4) == 0) {
+            isEnd = true;
+        }
     }
 
     // Clean up
